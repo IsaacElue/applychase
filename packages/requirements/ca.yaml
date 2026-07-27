@@ -1,0 +1,81 @@
+# California requirement pack (PRD §11 MVP scope: 5 prototyped items).
+#
+# Shape:
+#   jurisdiction_code  - two-letter state code, matches properties.jurisdiction_code
+#   version            - bump on any change to `requirements`; loaded into
+#                         requirement_packs.version (see infra/supabase migrations)
+#   requirements       - ordered list of required document/info items
+#     key         - stable slug, used as case_items.requirement_key
+#     label       - human-readable name shown in the UI and chase messages
+#     description - plain-language description of what satisfies this item;
+#                    doubles as the text embedded for similarity matching (PRD §8.2)
+#     keywords    - lowercase keywords/phrases used for rule-based matching
+#                    against filenames, email subject lines, and pasted text
+#                    (PRD §8.1) before any embedding fallback is tried
+
+jurisdiction_code: CA
+version: 1
+
+requirements:
+  - key: application
+    label: Rental Application
+    description: >
+      A completed rental application form with the applicant's name, contact
+      information, current address, and employment details.
+    keywords:
+      - application
+      - rental application
+      - applicant form
+      - tenant application
+
+  - key: government_id
+    label: Government-Issued ID
+    description: >
+      A copy of a government-issued photo ID such as a driver's license,
+      state ID card, or passport, used to verify the applicant's identity.
+    keywords:
+      - id
+      - identification
+      - driver's license
+      - drivers license
+      - state id
+      - passport
+
+  - key: income_proof
+    label: Proof of Income
+    description: >
+      Documentation showing the applicant's income, such as recent pay
+      stubs, an offer letter, bank statements, or a tax return.
+    keywords:
+      - pay stub
+      - paystub
+      - proof of income
+      - income statement
+      - offer letter
+      - bank statement
+      - w-2
+      - tax return
+
+  - key: background_check_consent
+    label: Background Check Consent
+    description: >
+      A signed authorization allowing the landlord or their screening
+      provider to run a background and credit check on the applicant.
+    keywords:
+      - background check
+      - consent
+      - authorization
+      - credit check consent
+      - screening consent
+
+  - key: prior_landlord_contact
+    label: Prior Landlord Contact
+    description: >
+      Contact information for the applicant's current or most recent
+      landlord, used as a rental history reference.
+    keywords:
+      - prior landlord
+      - previous landlord
+      - current landlord
+      - landlord reference
+      - rental reference
