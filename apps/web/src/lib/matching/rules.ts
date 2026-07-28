@@ -13,6 +13,16 @@ export interface MatchResult {
   matchedKeywords: string[]
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function containsKeyword(text: string, keyword: string): boolean {
+  // Word-boundary match, not substring — otherwise short keywords like "id"
+  // false-positive inside unrelated words (e.g. "provide").
+  return new RegExp(`\\b${escapeRegExp(keyword.toLowerCase())}\\b`).test(text)
+}
+
 export function matchText(
   text: string,
   requirements: RequirementDefinition[]
@@ -22,7 +32,7 @@ export function matchText(
   return requirements
     .map((requirement) => {
       const matchedKeywords = requirement.keywords.filter((keyword) =>
-        normalized.includes(keyword.toLowerCase())
+        containsKeyword(normalized, keyword)
       )
       return {
         requirementKey: requirement.key,

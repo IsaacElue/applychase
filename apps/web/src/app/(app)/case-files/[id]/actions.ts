@@ -3,7 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { matchText } from '@/lib/matching/rules'
-import type { CaseItem, RequirementPack } from '@/lib/types'
+import {
+  classifyByEmbedding,
+  EMBEDDING_MATCH_THRESHOLD,
+} from '@/lib/matching/embeddings'
+import type { CaseItem, MatchedBy, RequirementPack } from '@/lib/types'
 
 interface CaseFileForMatching {
   id: string
@@ -35,7 +39,57 @@ export async function classifyPastedText(formData: FormData) {
       pendingItems.some((item) => item.requirement_key === requirement.key)
   )
 
-  const matches = matchText(sourceText, pendingRequirements)
+  const ruleMatches = matchText(sourceText, pendingRequirements)
+  const ruleMatchedKeys = new Set(
+    ruleMatches.map((match) => match.requirementKey)
+  )
+
+  // Only fall back to embedding similarity for items the zero-cost keyword
+  // matcher didn't already catch (PRD §8 priority order: rules first).
+  const remainingRequirements = pendingRequirements.filter(
+    (requirement) => !ruleMatchedKeys.has(requirement.key)
+  )
+
+  let embeddingMatches: { requirementKey: string; confidence: number }[] = []
+  if (remainingRequirements.length > 0) {
+    try {
+      const results = await classifyByEmbedding(
+        sourceText,
+        remainingRequirements.map((requirement) => ({
+          key: requirement.key,
+          description: requirement.description,
+        }))
+      )
+      embeddingMatches = results
+        .filter((result) => result.score >= EMBEDDING_MATCH_THRESHOLD)
+        .map((result) => ({
+          requirementKey: result.key,
+          confidence: result.score,
+        }))
+    } catch (error) {
+      // ML service being down must never break the rules-based core loop.
+      console.error('Embedding classification unavailable:', error)
+    }
+  }
+
+  const matches: {
+    requirementKey: string
+    confidence: number
+    matchedBy: MatchedBy
+    matchedKeywords?: string[]
+  }[] = [
+    ...ruleMatches.map((match) => ({
+      requirementKey: match.requirementKey,
+      confidence: match.confidence,
+      matchedBy: 'rule' as const,
+      matchedKeywords: match.matchedKeywords,
+    })),
+    ...embeddingMatches.map((match) => ({
+      requirementKey: match.requirementKey,
+      confidence: match.confidence,
+      matchedBy: 'embedding' as const,
+    })),
+  ]
 
   for (const match of matches) {
     const item = pendingItems.find(
@@ -49,7 +103,7 @@ export async function classifyPastedText(formData: FormData) {
         status: 'received',
         source_text: sourceText,
         matched_confidence: match.confidence,
-        matched_by: 'rule',
+        matched_by: match.matchedBy,
         received_at: new Date().toISOString(),
       })
       .eq('id', item.id)
@@ -59,9 +113,11 @@ export async function classifyPastedText(formData: FormData) {
       event_type: 'case_item_matched',
       event_payload: {
         requirement_key: match.requirementKey,
-        matched_keywords: match.matchedKeywords,
         confidence: match.confidence,
-        matched_by: 'rule',
+        matched_by: match.matchedBy,
+        ...(match.matchedKeywords
+          ? { matched_keywords: match.matchedKeywords }
+          : {}),
       },
     })
   }
