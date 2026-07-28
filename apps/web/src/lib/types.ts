@@ -48,3 +48,14 @@ export interface CaseFile {
   requirement_pack_id: string
   created_at: string
 }
+
+export type ChaseMessageMethod = 'template' | 'llm' | 'ollama'
+
+export interface ChaseMessage {
+  id: string
+  case_file_id: string
+  method: ChaseMessageMethod
+  body: string
+  sent_at: string | null
+  created_at: string
+}

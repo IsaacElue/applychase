@@ -98,3 +98,27 @@ export async function setCaseItemStatus(formData: FormData) {
 
   revalidatePath(`/case-files/${caseFileId}`)
 }
+
+export async function sendChaseMessage(formData: FormData) {
+  const caseFileId = formData.get('case_file_id') as string
+  const body = formData.get('body') as string
+
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('chase_messages').insert({
+    case_file_id: caseFileId,
+    method: 'template',
+    body,
+    sent_at: new Date().toISOString(),
+  })
+
+  if (!error) {
+    await supabase.from('audit_log').insert({
+      case_file_id: caseFileId,
+      event_type: 'chase_message_sent',
+      event_payload: { method: 'template' },
+    })
+  }
+
+  revalidatePath(`/case-files/${caseFileId}`)
+}
