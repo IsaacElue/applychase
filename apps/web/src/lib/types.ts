@@ -59,3 +59,12 @@ export interface ChaseMessage {
   sent_at: string | null
   created_at: string
 }
+
+export interface AuditLogEntry {
+  id: string
+  case_file_id: string
+  event_type: string
+  event_payload: Record<string, unknown>
+  actor: string | null
+  created_at: string
+}

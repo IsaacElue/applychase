@@ -14,7 +14,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex flex-1 flex-col bg-slate-50">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+      <header className="print:hidden flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-semibold text-slate-900">ApplyChase</h1>
           <nav className="flex items-center gap-4 text-sm text-slate-600">
