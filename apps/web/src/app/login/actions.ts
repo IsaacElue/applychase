@@ -1,34 +1,26 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-export async function signIn(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-
+export async function signInWithGoogle() {
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const headersList = await headers()
+  const origin = headersList.get('origin') ?? `http://${headersList.get('host')}`
 
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${origin}/auth/callback` },
+  })
+
+  if (error || !data.url) {
+    redirect(
+      `/login?error=${encodeURIComponent(error?.message ?? 'Could not start Google sign-in')}`
+    )
   }
 
-  redirect('/')
-}
-
-export async function signUp(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({ email, password })
-
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
-  }
-
-  redirect('/login?message=Check your email to confirm your account')
+  redirect(data.url)
 }
 
 export async function signOut() {
