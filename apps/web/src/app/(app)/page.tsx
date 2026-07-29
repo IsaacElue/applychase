@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { CaseItem } from '@/lib/types'
+import { loadDemoData } from './actions'
 
 interface CaseFileRow {
   id: string
@@ -35,12 +36,24 @@ export default async function DashboardPage() {
     <div className="mx-auto w-full max-w-4xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-900">Case Files</h2>
-        <Link
-          href="/applicants/new"
-          className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          + New Applicant
-        </Link>
+        <div className="flex items-center gap-2">
+          {process.env.NODE_ENV !== 'production' && (
+            <form action={loadDemoData}>
+              <button
+                type="submit"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Load demo data
+              </button>
+            </form>
+          )}
+          <Link
+            href="/applicants/new"
+            className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            + New Applicant
+          </Link>
+        </div>
       </div>
 
       {error && (

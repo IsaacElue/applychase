@@ -4,11 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { matchText } from '@/lib/matching/rules'
 import { classifyByEmbeddingWithMargin } from '@/lib/matching/embeddings'
+import { applyCaseItemMatches, type CaseItemMatch } from '@/lib/matching/applyMatches'
 import { decryptSecret } from '@/lib/crypto/byok'
 import type {
   CaseItem,
   ChaseMessageMethod,
-  MatchedBy,
   RequirementPack,
 } from '@/lib/types'
 
@@ -73,12 +73,7 @@ export async function classifyPastedText(formData: FormData) {
     }
   }
 
-  const matches: {
-    requirementKey: string
-    confidence: number
-    matchedBy: MatchedBy
-    matchedKeywords?: string[]
-  }[] = [
+  const matches: CaseItemMatch[] = [
     ...ruleMatches.map((match) => ({
       requirementKey: match.requirementKey,
       confidence: match.confidence,
@@ -92,36 +87,7 @@ export async function classifyPastedText(formData: FormData) {
     })),
   ]
 
-  for (const match of matches) {
-    const item = pendingItems.find(
-      (candidate) => candidate.requirement_key === match.requirementKey
-    )
-    if (!item) continue
-
-    await supabase
-      .from('case_items')
-      .update({
-        status: 'received',
-        source_text: sourceText,
-        matched_confidence: match.confidence,
-        matched_by: match.matchedBy,
-        received_at: new Date().toISOString(),
-      })
-      .eq('id', item.id)
-
-    await supabase.from('audit_log').insert({
-      case_file_id: caseFileId,
-      event_type: 'case_item_matched',
-      event_payload: {
-        requirement_key: match.requirementKey,
-        confidence: match.confidence,
-        matched_by: match.matchedBy,
-        ...(match.matchedKeywords
-          ? { matched_keywords: match.matchedKeywords }
-          : {}),
-      },
-    })
-  }
+  await applyCaseItemMatches(supabase, caseFileId, pendingItems, matches, sourceText)
 
   revalidatePath(`/case-files/${caseFileId}`)
 }
