@@ -64,8 +64,10 @@ export default async function DashboardPage() {
 
       {caseFiles && caseFiles.length === 0 && (
         <p className="text-sm text-slate-500">
-          No case files yet. Add a property, then a new applicant, to start
-          one.
+          A case file tracks which documents an applicant still owes you —
+          application, ID, proof of income, and so on — so nothing gets lost
+          and you have a timestamped record of what came in and when. To
+          start one, add a property, then add an applicant for it.
         </p>
       )}
 

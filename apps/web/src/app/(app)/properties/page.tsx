@@ -30,7 +30,10 @@ export default async function PropertiesPage() {
 
       {properties && properties.length === 0 && (
         <p className="text-sm text-slate-500">
-          No properties yet. Add one before creating an applicant.
+          Properties are what applicants and their case files attach to —
+          each one carries the jurisdiction that determines which documents
+          you&rsquo;re required to collect. Add a property first, then you can
+          start adding applicants to it.
         </p>
       )}
 

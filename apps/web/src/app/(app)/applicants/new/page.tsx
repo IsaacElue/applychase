@@ -24,11 +24,12 @@ export default async function NewApplicantPage({
           New Applicant
         </h2>
         <p className="text-sm text-slate-500">
-          You need a property before adding an applicant.{' '}
+          Every applicant needs a property to attach to — that&rsquo;s what
+          determines which documents this jurisdiction requires.{' '}
           <Link href="/properties/new" className="text-slate-900 underline">
-            Add one now
+            Add a property first
           </Link>
-          .
+          , then come back to add this applicant.
         </p>
       </div>
     )

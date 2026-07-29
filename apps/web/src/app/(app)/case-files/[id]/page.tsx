@@ -111,12 +111,14 @@ export default async function CaseFileDetailPage({
 
       <div className="mb-8 rounded-lg border border-slate-200 bg-white p-4">
         <h3 className="mb-2 text-sm font-medium text-slate-900">
-          Check pasted text against requirements
+          Log what the applicant sent you
         </h3>
         <p className="mb-3 text-xs text-slate-500">
-          Paste an email, note, or document description from the applicant.
-          It will be matched against outstanding requirements by keyword and
-          local similarity matching — no AI call is made.
+          Paste in the applicant&rsquo;s email or message and this will check
+          it against what&rsquo;s still outstanding, marking anything it recognizes
+          as received automatically — no need to review each item by hand.
+          Matching happens locally by keyword and text similarity; it never
+          calls out to an AI service.
         </p>
         <form action={classifyPastedText} className="space-y-3">
           <input type="hidden" name="case_file_id" value={caseFile.id} />
@@ -146,7 +148,8 @@ export default async function CaseFileDetailPage({
         </div>
       ) : (
         <p className="mb-8 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
-          All requirements received — no chase message needed.
+          Everything&rsquo;s been received for this applicant — there&rsquo;s
+          nothing left to chase.
         </p>
       )}
 
