@@ -142,6 +142,47 @@ export async function setCaseItemStatus(formData: FormData) {
   )
 }
 
+// Archive, never delete (this is a compliance/audit-trail tool — deleting
+// a case file would undermine the whole point). A reason is required so
+// there's always a stated explanation on record, same as every other
+// state change here. The case file itself, its items, chase messages, and
+// audit log are untouched — this only sets archived_at/archive_reason and
+// adds one more audit_log entry.
+export async function archiveCaseFile(formData: FormData) {
+  const caseFileId = formData.get('case_file_id') as string
+  const reason = (formData.get('reason') as string)?.trim()
+
+  if (!reason) {
+    redirect(
+      `/case-files/${caseFileId}?error=${encodeURIComponent('An archive reason is required')}`
+    )
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  await supabase
+    .from('case_files')
+    .update({
+      archived_at: new Date().toISOString(),
+      archive_reason: reason,
+    })
+    .eq('id', caseFileId)
+
+  await supabase.from('audit_log').insert({
+    case_file_id: caseFileId,
+    event_type: 'case_file_archived',
+    event_payload: { reason },
+    actor: user?.id,
+  })
+
+  revalidatePath(`/case-files/${caseFileId}`)
+  revalidatePath('/')
+  redirect(`/case-files/${caseFileId}`)
+}
+
 export async function sendChaseMessage(formData: FormData) {
   const caseFileId = formData.get('case_file_id') as string
   const body = formData.get('body') as string

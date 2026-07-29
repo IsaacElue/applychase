@@ -11,11 +11,14 @@ import type {
 } from '@/lib/types'
 import { classifyPastedText, setCaseItemStatus } from './actions'
 import { ChaseMessagePanel } from './ChaseMessagePanel'
+import { ArchiveCaseFileForm } from './ArchiveCaseFileForm'
 import { Stamp } from '@/components/Stamp'
 
 interface CaseFileDetail {
   id: string
   created_at: string
+  archived_at: string | null
+  archive_reason: string | null
   applicants:
     | (Applicant & {
         properties: Property & { organizations: { name: string } | null }
@@ -31,10 +34,10 @@ export default async function CaseFileDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ justStamped?: string }>
+  searchParams: Promise<{ justStamped?: string; error?: string }>
 }) {
   const { id } = await params
-  const { justStamped } = await searchParams
+  const { justStamped, error } = await searchParams
   const justStampedKeys = new Set(
     justStamped ? justStamped.split(',') : []
   )
@@ -46,6 +49,8 @@ export default async function CaseFileDetailPage({
       `
       id,
       created_at,
+      archived_at,
+      archive_reason,
       applicants ( *, properties ( *, organizations ( name ) ) ),
       requirement_packs ( * ),
       case_items ( * ),
@@ -109,6 +114,19 @@ export default async function CaseFileDetailPage({
           View audit packet
         </Link>
       </div>
+
+      {error && (
+        <p className="mb-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      {caseFile.archived_at && (
+        <p className="mb-6 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-600">
+          Archived {new Date(caseFile.archived_at).toLocaleString()} &middot;{' '}
+          {caseFile.archive_reason}
+        </p>
+      )}
 
       <div className="mb-8 rounded-lg border border-slate-200 bg-white p-4">
         <h3 className="mb-2 text-sm font-medium text-slate-900">
@@ -240,6 +258,12 @@ export default async function CaseFileDetailPage({
           )
         })}
       </ul>
+
+      {!caseFile.archived_at && (
+        <div className="mt-8 border-t border-slate-200 pt-4">
+          <ArchiveCaseFileForm caseFileId={caseFile.id} />
+        </div>
+      )}
     </div>
   )
 }

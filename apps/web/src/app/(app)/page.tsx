@@ -6,6 +6,8 @@ import { loadDemoData } from './actions'
 interface CaseFileRow {
   id: string
   created_at: string
+  archived_at: string | null
+  archive_reason: string | null
   applicants: {
     name: string
     properties: {
@@ -16,21 +18,34 @@ interface CaseFileRow {
   case_items: Pick<CaseItem, 'status'>[]
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>
+}) {
+  const { view } = await searchParams
+  const showArchived = view === 'archived'
   const supabase = await createClient()
 
-  const { data: caseFiles, error } = await supabase
+  let query = supabase
     .from('case_files')
     .select(
       `
       id,
       created_at,
+      archived_at,
+      archive_reason,
       applicants ( name, properties ( address, unit ) ),
       case_items ( status )
     `
     )
     .order('created_at', { ascending: false })
-    .returns<CaseFileRow[]>()
+
+  query = showArchived
+    ? query.not('archived_at', 'is', null)
+    : query.is('archived_at', null)
+
+  const { data: caseFiles, error } = await query.returns<CaseFileRow[]>()
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 py-8">
@@ -56,6 +71,29 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      <div className="mb-6 flex gap-4 border-b border-slate-200 text-sm">
+        <Link
+          href="/"
+          className={`-mb-px border-b-2 px-1 pb-2 ${
+            showArchived
+              ? 'border-transparent text-slate-500 hover:text-slate-900'
+              : 'border-slate-900 font-medium text-slate-900'
+          }`}
+        >
+          Case Files
+        </Link>
+        <Link
+          href="/?view=archived"
+          className={`-mb-px border-b-2 px-1 pb-2 ${
+            showArchived
+              ? 'border-slate-900 font-medium text-slate-900'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          Archived
+        </Link>
+      </div>
+
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {error.message}
@@ -64,10 +102,9 @@ export default async function DashboardPage() {
 
       {caseFiles && caseFiles.length === 0 && (
         <p className="text-sm text-slate-500">
-          A case file tracks which documents an applicant still owes you —
-          application, ID, proof of income, and so on — so nothing gets lost
-          and you have a timestamped record of what came in and when. To
-          start one, add a property, then add an applicant for it.
+          {showArchived
+            ? 'No archived case files. Case files you archive (leased, applicant withdrew, duplicate entry, etc.) show up here instead of the default list — they’re never deleted.'
+            : 'A case file tracks which documents an applicant still owes you — application, ID, proof of income, and so on — so nothing gets lost and you have a timestamped record of what came in and when. To start one, add a property, then add an applicant for it.'}
         </p>
       )}
 
@@ -97,15 +134,21 @@ export default async function DashboardPage() {
                         : ''}
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                      complete
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-amber-50 text-amber-700'
-                    }`}
-                  >
-                    {received}/{total} received
-                  </span>
+                  {showArchived ? (
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      {caseFile.archive_reason}
+                    </span>
+                  ) : (
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        complete
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}
+                    >
+                      {received}/{total} received
+                    </span>
+                  )}
                 </Link>
               </li>
             )

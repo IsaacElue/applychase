@@ -47,6 +47,8 @@ export interface CaseFile {
   applicant_id: string
   requirement_pack_id: string
   created_at: string
+  archived_at: string | null
+  archive_reason: string | null
 }
 
 export type ChaseMessageMethod = 'template' | 'llm' | 'ollama'
