@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Design tokens — docs/DESIGN.md §2. No dark mode in v1 (§8 non-goal):
+   a single well-executed light theme, deliberately not theme-aware. */
+@theme {
+  --color-paper: #ECEEE7;
+  --color-card: #F7F6F0;
+  --color-ink: #1F2A33;
+  --color-ink-soft: #5A6870;
+  --color-stamp-red: #C4472B;
+  --color-folder-tan: #B98A4E;
+  --color-verified: #3F6B4F;
+  --color-rule: #CFC9BA;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-spectral);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-card: 6px;
+  --radius-tag: 2px;
+
+  --shadow-hover: 0 2px 8px rgba(31, 42, 51, 0.10);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
 }

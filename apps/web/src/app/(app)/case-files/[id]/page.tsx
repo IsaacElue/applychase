@@ -11,6 +11,7 @@ import type {
 } from '@/lib/types'
 import { classifyPastedText, setCaseItemStatus } from './actions'
 import { ChaseMessagePanel } from './ChaseMessagePanel'
+import { Stamp } from '@/components/Stamp'
 
 interface CaseFileDetail {
   id: string
@@ -25,18 +26,18 @@ interface CaseFileDetail {
   chase_messages: ChaseMessage[]
 }
 
-const STATUS_STYLES: Record<CaseItem['status'], string> = {
-  received: 'bg-green-50 text-green-700',
-  missing: 'bg-amber-50 text-amber-700',
-  flagged: 'bg-red-50 text-red-700',
-}
-
 export default async function CaseFileDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ justStamped?: string }>
 }) {
   const { id } = await params
+  const { justStamped } = await searchParams
+  const justStampedKeys = new Set(
+    justStamped ? justStamped.split(',') : []
+  )
   const supabase = await createClient()
 
   const { data: caseFile } = await supabase
@@ -202,11 +203,12 @@ export default async function CaseFileDetailPage({
                     </p>
                   )}
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[item.status]}`}
-                >
-                  {item.status}
-                </span>
+                <div className="shrink-0">
+                  <Stamp
+                    status={item.status === 'received' ? 'received' : 'missing'}
+                    animate={justStampedKeys.has(item.requirement_key)}
+                  />
+                </div>
               </div>
               <form action={setCaseItemStatus} className="mt-3 flex gap-2">
                 <input type="hidden" name="case_item_id" value={item.id} />

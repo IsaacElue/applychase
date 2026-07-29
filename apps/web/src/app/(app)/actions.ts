@@ -87,6 +87,8 @@ export async function loadDemoData() {
     .eq('id', caseFileId)
     .single<CaseFileForSeeding>()
 
+  let justStamped: string[] = []
+
   if (caseFile) {
     const ruleMatches = matchText(
       DEMO_SOURCE_TEXT,
@@ -107,7 +109,13 @@ export async function loadDemoData() {
       matches,
       DEMO_SOURCE_TEXT
     )
+
+    justStamped = matches.map((match) => match.requirementKey)
   }
 
-  redirect(`/case-files/${caseFileId}`)
+  redirect(
+    justStamped.length > 0
+      ? `/case-files/${caseFileId}?justStamped=${justStamped.join(',')}`
+      : `/case-files/${caseFileId}`
+  )
 }

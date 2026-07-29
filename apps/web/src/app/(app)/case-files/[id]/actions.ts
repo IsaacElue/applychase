@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { matchText } from '@/lib/matching/rules'
 import { classifyByEmbeddingWithMargin } from '@/lib/matching/embeddings'
@@ -90,6 +91,13 @@ export async function classifyPastedText(formData: FormData) {
   await applyCaseItemMatches(supabase, caseFileId, pendingItems, matches, sourceText)
 
   revalidatePath(`/case-files/${caseFileId}`)
+
+  const justStamped = matches.map((match) => match.requirementKey)
+  redirect(
+    justStamped.length > 0
+      ? `/case-files/${caseFileId}?justStamped=${justStamped.join(',')}`
+      : `/case-files/${caseFileId}`
+  )
 }
 
 export async function setCaseItemStatus(formData: FormData) {
@@ -101,6 +109,12 @@ export async function setCaseItemStatus(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  const { data: item } = await supabase
+    .from('case_items')
+    .select('requirement_key')
+    .eq('id', caseItemId)
+    .single()
 
   await supabase
     .from('case_items')
@@ -120,6 +134,12 @@ export async function setCaseItemStatus(formData: FormData) {
   })
 
   revalidatePath(`/case-files/${caseFileId}`)
+
+  redirect(
+    status === 'received' && item
+      ? `/case-files/${caseFileId}?justStamped=${item.requirement_key}`
+      : `/case-files/${caseFileId}`
+  )
 }
 
 export async function sendChaseMessage(formData: FormData) {
