@@ -115,8 +115,8 @@ export default async function CaseFileDetailPage({
         </h3>
         <p className="mb-3 text-xs text-slate-500">
           Paste an email, note, or document description from the applicant.
-          It will be matched against outstanding requirements by keyword —
-          no AI call is made.
+          It will be matched against outstanding requirements by keyword and
+          local similarity matching — no AI call is made.
         </p>
         <form action={classifyPastedText} className="space-y-3">
           <input type="hidden" name="case_file_id" value={caseFile.id} />
@@ -193,7 +193,7 @@ export default async function CaseFileDetailPage({
                     <p className="mt-2 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
                       Matched from pasted text
                       {item.matched_confidence !== null
-                        ? ` (${Math.round(item.matched_confidence * 100)}% keyword match)`
+                        ? ` (${Math.round(item.matched_confidence * 100)}% ${item.matched_by === 'embedding' ? 'similarity' : 'keyword'} match)`
                         : ''}
                       : “{item.source_text}”
                     </p>

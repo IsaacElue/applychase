@@ -3,10 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { matchText } from '@/lib/matching/rules'
-import {
-  classifyByEmbedding,
-  EMBEDDING_MATCH_THRESHOLD,
-} from '@/lib/matching/embeddings'
+import { classifyByEmbeddingWithMargin } from '@/lib/matching/embeddings'
 import { decryptSecret } from '@/lib/crypto/byok'
 import type {
   CaseItem,
@@ -59,19 +56,17 @@ export async function classifyPastedText(formData: FormData) {
   let embeddingMatches: { requirementKey: string; confidence: number }[] = []
   if (remainingRequirements.length > 0) {
     try {
-      const results = await classifyByEmbedding(
+      const results = await classifyByEmbeddingWithMargin(
         sourceText,
         remainingRequirements.map((requirement) => ({
           key: requirement.key,
           description: requirement.description,
         }))
       )
-      embeddingMatches = results
-        .filter((result) => result.score >= EMBEDDING_MATCH_THRESHOLD)
-        .map((result) => ({
-          requirementKey: result.key,
-          confidence: result.score,
-        }))
+      embeddingMatches = results.map((result) => ({
+        requirementKey: result.key,
+        confidence: result.score,
+      }))
     } catch (error) {
       // ML service being down must never break the rules-based core loop.
       console.error('Embedding classification unavailable:', error)
