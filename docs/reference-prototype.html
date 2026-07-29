@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ApplyChase</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --paper:#EDEFEA;
+  --card:#F7F6F0;
+  --ink:#1F2A33;
+  --ink-soft:#5A6870;
+  --stamp-red:#C4472B;
+  --folder-tan:#B98A4E;
+  --verified:#3F6B4F;
+  --rule:#CFC9BA;
+  --white:#FFFFFF;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+}
+.app{display:grid; grid-template-columns:270px 1fr; min-height:100vh;}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  background:var(--card);
+  border-right:1px solid var(--rule);
+  padding:24px 18px;
+  display:flex; flex-direction:column; gap:18px;
+}
+.brand{display:flex; align-items:baseline; gap:8px;}
+.brand-mark{
+  font-family:'Spectral',serif; font-weight:700; font-size:22px; letter-spacing:-0.01em;
+}
+.brand-tag{
+  font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:0.08em;
+}
+.new-case-btn{
+  background:var(--ink); color:var(--paper); border:none; border-radius:3px;
+  padding:9px 12px; font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+  letter-spacing:0.04em; cursor:pointer; text-align:left;
+}
+.new-case-btn:hover{background:var(--stamp-red);}
+.case-list{display:flex; flex-direction:column; gap:6px; overflow-y:auto;}
+.case-item{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 10px; border-radius:5px; cursor:pointer;
+  border:1px solid transparent;
+}
+.case-item:hover{background:#EAE7DC;}
+.case-item.active{background:var(--white); border-color:var(--rule); box-shadow:0 1px 2px rgba(31,42,51,0.06);}
+.ring{width:32px; height:32px; flex-shrink:0;}
+.case-info{min-width:0;}
+.case-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.case-prop{font-size:11px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.sidebar-foot{
+  margin-top:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft);
+  border-top:1px solid var(--rule); padding-top:12px; line-height:1.6;
+}
+
+/* ===== Main ===== */
+.main{padding:32px 44px; max-width:920px;}
+.case-header{
+  display:flex; justify-content:space-between; align-items:flex-end;
+  border-bottom:2px solid var(--ink); padding-bottom:16px; margin-bottom:26px;
+}
+.case-title{font-family:'Spectral',serif; font-weight:700; font-size:30px;}
+.case-sub{font-size:13px; color:var(--ink-soft); margin-top:4px;}
+.jurisdiction-badge{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--folder-tan);
+  color:var(--white); padding:5px 10px; border-radius:2px; letter-spacing:0.04em;
+}
+
+.compliance-note{
+  background:#F1EADA; border-left:3px solid var(--folder-tan);
+  padding:12px 14px; font-size:12.5px; color:#5A4A2C; margin-bottom:26px; line-height:1.5;
+}
+
+.section-label{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--ink-soft); margin-bottom:12px;
+}
+
+.doc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin-bottom:32px;}
+.doc-card{
+  background:var(--card); border:1px solid var(--rule); border-radius:6px;
+  padding:16px 14px; cursor:pointer; position:relative; min-height:128px;
+  display:flex; flex-direction:column; justify-content:space-between;
+  transition:box-shadow .15s ease;
+}
+.doc-card:hover{box-shadow:0 2px 8px rgba(31,42,51,0.10);}
+.doc-label{font-size:13px; font-weight:600; line-height:1.3;}
+.stamp{
+  align-self:flex-start; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+  padding:5px 9px; border-radius:2px; letter-spacing:0.03em;
+}
+.stamp.missing{
+  border:1.5px dashed #A9A296; color:var(--ink-soft); background:transparent;
+}
+.stamp.received{
+  border:1.5px solid var(--stamp-red); color:var(--stamp-red);
+  transform:rotate(-3deg); font-weight:600; background:rgba(196,71,43,0.06);
+}
+.doc-date{font-size:10.5px; color:var(--ink-soft); margin-top:6px;}
+
+/* modal */
+.overlay{
+  position:fixed; inset:0; background:rgba(31,42,51,0.45); display:none;
+  align-items:center; justify-content:center; z-index:50; padding:20px;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--white); width:100%; max-width:480px; border-radius:8px;
+  padding:26px; box-shadow:0 12px 40px rgba(0,0,0,0.25);
+}
+.modal h3{font-family:'Spectral',serif; font-size:19px; margin-bottom:4px;}
+.modal p.hint{font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;}
+textarea, input[type=text]{
+  width:100%; border:1px solid var(--rule); border-radius:5px; padding:10px 12px;
+  font-family:'Inter',sans-serif; font-size:13px; resize:vertical; color:var(--ink);
+}
+textarea{min-height:88px; margin-bottom:14px;}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px;}
+button.primary{
+  background:var(--ink); color:var(--paper); border:none; border-radius:4px;
+  padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer;
+}
+button.primary:hover{background:var(--stamp-red);}
+button.ghost{
+  background:transparent; border:1px solid var(--rule); border-radius:4px;
+  padding:9px 16px; font-size:13px; cursor:pointer; color:var(--ink);
+}
+button.ghost:hover{border-color:var(--ink);}
+.result-box{
+  margin-top:14px; font-size:12.5px; padding:10px 12px; border-radius:5px; line-height:1.5;
+}
+.result-box.ok{background:#E7EFE9; color:var(--verified);}
+.result-box.no{background:#F5E7E3; color:var(--stamp-red);}
+
+/* chase + packet panels */
+.panel{
+  background:var(--card); border:1px solid var(--rule); border-radius:8px;
+  padding:22px 24px; margin-bottom:22px;
+}
+.panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.panel-head h4{font-family:'Spectral',serif; font-size:17px;}
+.chase-output{
+  background:var(--white); border:1px solid var(--rule); border-radius:6px;
+  padding:16px; font-size:13px; line-height:1.6; white-space:pre-wrap;
+  font-family:'IBM Plex Mono',monospace; margin-top:12px; display:none;
+}
+.packet{
+  background:var(--white); border:1px solid var(--rule); border-radius:6px;
+  padding:18px 20px; margin-top:12px; display:none;
+}
+.packet-row{
+  display:flex; justify-content:space-between; padding:7px 0;
+  border-bottom:1px dotted var(--rule); font-size:12.5px;
+}
+.packet-row:last-child{border-bottom:none;}
+.packet-status{font-family:'IBM Plex Mono',monospace; font-size:11px;}
+.packet-status.ok{color:var(--verified);}
+.packet-status.pending{color:var(--stamp-red);}
+.packet-foot{
+  margin-top:14px; padding-top:12px; border-top:1px solid var(--ink);
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); line-height:1.6;
+}
+.loading{font-size:12px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;}
+.copy-btn{
+  background:none; border:1px solid var(--rule); border-radius:4px; padding:6px 11px;
+  font-size:11px; cursor:pointer; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;
+}
+.copy-btn:hover{border-color:var(--ink); color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">ApplyChase</div>
+    </div>
+    <div class="brand-tag">Case files, not chatbots</div>
+    <button class="new-case-btn" onclick="addApplicant()">+ New Case File</button>
+    <div class="case-list" id="caseList"></div>
+    <div class="sidebar-foot">JURISDICTION: CALIFORNIA<br>5 REQUIRED ITEMS PER FILE</div>
+  </div>
+
+  <div class="main">
+    <div class="case-header">
+      <div>
+        <div class="case-title" id="caseTitle">—</div>
+        <div class="case-sub" id="caseSub">—</div>
+      </div>
+      <div class="jurisdiction-badge">CA screening pack</div>
+    </div>
+
+    <div class="compliance-note">
+      This file tracks intake and documentation only — no automated accept/deny scoring. Every status change below is timestamped for your records, consistent with FTC/CFPB scrutiny of algorithmic tenant screening and California's photo-documentation requirement.
+    </div>
+
+    <div class="section-label">Required items — click to log what came in</div>
+    <div class="doc-grid" id="docGrid"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h4>Chase message</h4>
+        <button class="primary" id="chaseBtn" onclick="generateChase()">Draft chase email</button>
+      </div>
+      <div class="section-label" style="margin-bottom:0;">Drafts a reminder naming exactly what's still missing</div>
+      <div id="chaseLoading"></div>
+      <div class="chase-output" id="chaseOutput"></div>
+      <div id="chaseActions" style="margin-top:10px; display:none;">
+        <button class="copy-btn" onclick="copyChase()">Copy to clipboard</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h4>Audit packet</h4>
+        <button class="ghost" onclick="assemblePacket()">Assemble packet</button>
+      </div>
+      <div class="section-label" style="margin-bottom:0;">Compiles the file into one dated, defensible record</div>
+      <div class="packet" id="packet"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalDocLabel">Log a submission</h3>
+    <p class="hint">Paste what the applicant sent — an email line, a filename, anything. ApplyChase checks it against this item.</p>
+    <textarea id="modalInput" placeholder="e.g. &quot;Attached is my June pay stub from Trader Joe's&quot;"></textarea>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancel</button>
+      <button class="primary" id="classifyBtn" onclick="classifySubmission()">Check with AI</button>
+    </div>
+    <div id="classifyResult"></div>
+  </div>
+</div>
+
+<script>
+const REQUIRED_DOCS = [
+  {id:'app', label:'Signed Application'},
+  {id:'id', label:'Photo ID'},
+  {id:'income', label:'Proof of Income'},
+  {id:'consent', label:'Background Check Consent'},
+  {id:'history', label:'Prior Landlord Contact'}
+];
+
+let applicants = [
+  {id:1, name:'Maria Chen', property:'14 Elm St, Unit B', docs:{
+    app:{status:'received', date:'Jul 12'}, id:{status:'received', date:'Jul 12'},
+    income:{status:'missing'}, consent:{status:'received', date:'Jul 13'}, history:{status:'missing'}
+  }},
+  {id:2, name:'Devon Ruiz', property:'22 Oak Ave', docs:{
+    app:{status:'received', date:'Jul 10'}, id:{status:'missing'},
+    income:{status:'missing'}, consent:{status:'missing'}, history:{status:'missing'}
+  }},
+  {id:3, name:'Priya Nair', property:'5 River Court', docs:{
+    app:{status:'received', date:'Jul 8'}, id:{status:'received', date:'Jul 8'},
+    income:{status:'received', date:'Jul 9'}, consent:{status:'received', date:'Jul 9'},
+    history:{status:'received', date:'Jul 11'}
+  }}
+];
+
+let activeId = 1;
+let activeDocId = null;
+
+function completeness(a){
+  const total = REQUIRED_DOCS.length;
+  const done = REQUIRED_DOCS.filter(d => a.docs[d.id].status === 'received').length;
+  return {done, total, pct: done/total};
+}
+
+function ringSvg(pct){
+  const r = 13, c = 2*Math.PI*r;
+  const offset = c * (1 - pct);
+  const color = pct === 1 ? '#3F6B4F' : (pct === 0 ? '#A9A296' : '#C4472B');
+  return `<svg class="ring" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="${r}" fill="none" stroke="#DDD8CB" stroke-width="3"/>
+    <circle cx="16" cy="16" r="${r}" fill="none" stroke="${color}" stroke-width="3"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"
+      transform="rotate(-90 16 16)"/>
+  </svg>`;
+}
+
+function renderSidebar(){
+  const list = document.getElementById('caseList');
+  list.innerHTML = applicants.map(a => {
+    const {done, total, pct} = completeness(a);
+    return `<div class="case-item ${a.id===activeId?'active':''}" onclick="selectApplicant(${a.id})">
+      ${ringSvg(pct)}
+      <div class="case-info">
+        <div class="case-name">${a.name}</div>
+        <div class="case-prop">${a.property} · ${done}/${total}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectApplicant(id){
+  activeId = id;
+  document.getElementById('chaseOutput').style.display = 'none';
+  document.getElementById('chaseActions').style.display = 'none';
+  document.getElementById('packet').style.display = 'none';
+  renderSidebar();
+  renderCase();
+}
+
+function renderCase(){
+  const a = applicants.find(x => x.id === activeId);
+  document.getElementById('caseTitle').textContent = a.name;
+  document.getElementById('caseSub').textContent = a.property;
+
+  const grid = document.getElementById('docGrid');
+  grid.innerHTML = REQUIRED_DOCS.map(d => {
+    const rec = a.docs[d.id];
+    const isReceived = rec.status === 'received';
+    return `<div class="doc-card" onclick="openModal('${d.id}')">
+      <div class="doc-label">${d.label}</div>
+      <div>
+        <span class="stamp ${isReceived?'received':'missing'}">${isReceived ? 'RECEIVED' : 'PENDING'}</span>
+        ${isReceived ? `<div class="doc-date">Logged ${rec.date}</div>` : `<div class="doc-date">Click to log</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addApplicant(){
+  const name = prompt('Applicant name:');
+  if(!name) return;
+  const property = prompt('Property / unit:') || 'Unassigned';
+  const id = Math.max(...applicants.map(a=>a.id)) + 1;
+  const docs = {};
+  REQUIRED_DOCS.forEach(d => docs[d.id] = {status:'missing'});
+  applicants.push({id, name, property, docs});
+  activeId = id;
+  renderSidebar();
+  renderCase();
+}
+
+function openModal(docId){
+  activeDocId = docId;
+  const doc = REQUIRED_DOCS.find(d => d.id === docId);
+  document.getElementById('modalDocLabel').textContent = `Log: ${doc.label}`;
+  document.getElementById('modalInput').value = '';
+  document.getElementById('classifyResult').innerHTML = '';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+}
+
+async function classifySubmission(){
+  const text = document.getElementById('modalInput').value.trim();
+  const resultEl = document.getElementById('classifyResult');
+  if(!text){ resultEl.innerHTML = `<div class="result-box no">Paste something first.</div>`; return; }
+
+  const btn = document.getElementById('classifyBtn');
+  btn.disabled = true;
+  resultEl.innerHTML = `<div class="loading">Checking against required items…</div>`;
+
+  const doc = REQUIRED_DOCS.find(d => d.id === activeDocId);
+  const docList = REQUIRED_DOCS.map(d => `${d.id}: ${d.label}`).join('; ');
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `You are a document intake classifier for a tenant-screening case file. Required items: ${docList}.
+The landlord is currently trying to log an item for: "${doc.label}" (id: ${doc.id}).
+The landlord pasted this description of what the applicant sent: "${text}"
+
+Decide if this description plausibly satisfies the "${doc.label}" requirement.
+Respond ONLY with strict JSON, no markdown, no preamble, in this exact shape:
+{"matches": true or false, "note": "one short sentence, under 20 words, explaining the decision in plain language"}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || '').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+
+    if(parsed.matches){
+      const a = applicants.find(x => x.id === activeId);
+      const today = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
+      a.docs[activeDocId] = {status:'received', date: today};
+      resultEl.innerHTML = `<div class="result-box ok">✓ Logged. ${parsed.note}</div>`;
+      renderSidebar();
+      renderCase();
+      setTimeout(closeModal, 900);
+    } else {
+      resultEl.innerHTML = `<div class="result-box no">Not matched. ${parsed.note}</div>`;
+    }
+  } catch(err){
+    console.error('Classification error:', err);
+    resultEl.innerHTML = `<div class="result-box no">Couldn't reach the classifier. Try again in a moment.</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function generateChase(){
+  const a = applicants.find(x => x.id === activeId);
+  const missing = REQUIRED_DOCS.filter(d => a.docs[d.id].status === 'missing');
+  const outputEl = document.getElementById('chaseOutput');
+  const loadingEl = document.getElementById('chaseLoading');
+  const actionsEl = document.getElementById('chaseActions');
+  const btn = document.getElementById('chaseBtn');
+
+  if(missing.length === 0){
+    outputEl.style.display = 'block';
+    actionsEl.style.display = 'none';
+    outputEl.textContent = `${a.name}'s file is complete — nothing left to chase.`;
+    return;
+  }
+
+  btn.disabled = true;
+  outputEl.style.display = 'none';
+  actionsEl.style.display = 'none';
+  loadingEl.innerHTML = `<div class="loading">Drafting a message for ${a.name}…</div>`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `Write a short, warm but direct email from a landlord to a rental applicant named ${a.name}, chasing exactly these missing items: ${missing.map(d=>d.label).join(', ')}.
+Property: ${a.property}. Keep it under 120 words, plain text, no subject line, no placeholders in brackets. Sign off as "Property Management".`
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('').trim();
+    loadingEl.innerHTML = '';
+    outputEl.style.display = 'block';
+    outputEl.textContent = text;
+    actionsEl.style.display = 'block';
+  } catch(err){
+    console.error('Chase draft error:', err);
+    loadingEl.innerHTML = '';
+    outputEl.style.display = 'block';
+    outputEl.textContent = "Couldn't draft the message right now — try again in a moment.";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copyChase(){
+  const text = document.getElementById('chaseOutput').textContent;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const btn = document.querySelector('.copy-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Copied';
+  setTimeout(()=> btn.textContent = orig, 1200);
+}
+
+function assemblePacket(){
+  const a = applicants.find(x => x.id === activeId);
+  const {done, total} = completeness(a);
+  const packet = document.getElementById('packet');
+  const now = new Date().toLocaleString('en-US', {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
+
+  packet.innerHTML = `
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-bottom:10px;">
+      CASE FILE — ${a.name.toUpperCase()} — ${a.property}
+    </div>
+    ${REQUIRED_DOCS.map(d => {
+      const rec = a.docs[d.id];
+      const ok = rec.status === 'received';
+      return `<div class="packet-row">
+        <span>${d.label}</span>
+        <span class="packet-status ${ok?'ok':'pending'}">${ok ? 'RECEIVED · '+rec.date : 'PENDING'}</span>
+      </div>`;
+    }).join('')}
+    <div class="packet-foot">
+      ${done}/${total} items on file · assembled ${now}<br>
+      No automated screening decision was made on this file. Status reflects document intake only, per CA documentation requirements.
+    </div>
+  `;
+  packet.style.display = 'block';
+}
+
+renderSidebar();
+renderCase();
+</script>
+</body>
+</html>
