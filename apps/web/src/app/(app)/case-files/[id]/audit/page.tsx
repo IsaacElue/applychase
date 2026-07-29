@@ -10,6 +10,8 @@ import type {
   RequirementPack,
 } from '@/lib/types'
 import { PrintButton } from './PrintButton'
+import { Stamp } from '@/components/Stamp'
+import { Badge } from '@/components/Badge'
 
 interface CaseItemWithReviewer extends CaseItem {
   users: { email: string } | null
@@ -31,12 +33,6 @@ interface AuditPacketData {
   case_items: CaseItemWithReviewer[]
   chase_messages: ChaseMessage[]
   audit_log: AuditLogEntryWithActor[]
-}
-
-const STATUS_STYLES: Record<CaseItem['status'], string> = {
-  received: 'bg-green-50 text-green-700',
-  missing: 'bg-amber-50 text-amber-700',
-  flagged: 'bg-red-50 text-red-700',
 }
 
 export default async function AuditPacketPage({
@@ -88,36 +84,36 @@ export default async function AuditPacketPage({
       <div className="mb-6 flex items-start justify-between print:hidden">
         <Link
           href={`/case-files/${caseFile.id}`}
-          className="text-sm text-slate-500 hover:text-slate-900"
+          className="rounded-tag text-sm text-ink-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
         >
           &larr; Back to case file
         </Link>
         <PrintButton />
       </div>
 
-      <div className="mb-6 border-b border-slate-200 pb-6">
-        <h2 className="text-xl font-semibold text-slate-900">
-          Audit Packet — {caseFile.applicants?.name}
+      <div className="mb-6 border-b-2 border-ink pb-6">
+        <h2 className="font-display text-2xl font-bold text-ink">
+          Audit Packet &mdash; {caseFile.applicants?.name}
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-ink-soft">
           {caseFile.applicants?.properties.address}
           {caseFile.applicants?.properties.unit
             ? ` #${caseFile.applicants.properties.unit}`
             : ''}{' '}
           &middot; {caseFile.applicants?.properties.organizations?.name}
         </p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-2 font-mono text-xs text-ink-soft">
           Case file opened {new Date(caseFile.created_at).toLocaleString()}
           {' '}&middot; {caseFile.requirement_packs.jurisdiction_code}{' '}
           requirement pack v{caseFile.requirement_packs.version} &middot;{' '}
           {receivedCount}/{caseFile.case_items.length} items received
         </p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 font-mono text-xs text-ink-soft">
           Packet generated {new Date().toLocaleString()}
         </p>
       </div>
 
-      <div className="mb-8 rounded-md border border-slate-300 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+      <div className="mb-8 rounded-card border border-folder-tan/40 bg-folder-tan/10 px-4 py-3 text-xs text-ink-soft">
         This packet documents which items were received and when. It reflects
         document intake only — <strong>no automated accept/deny decision
         was made</strong> about this applicant by ApplyChase or any part of
@@ -125,82 +121,70 @@ export default async function AuditPacketPage({
       </div>
 
       <section className="mb-8">
-        <h3 className="mb-2 text-sm font-semibold text-slate-900">
+        <h3 className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-soft">
           Requirement items
         </h3>
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
-              <th className="py-2 pr-2">Item</th>
-              <th className="py-2 pr-2">Status</th>
-              <th className="py-2 pr-2">Received</th>
-              <th className="py-2 pr-2">Matched by</th>
-              <th className="py-2">Reviewed by</th>
-            </tr>
-          </thead>
-          <tbody>
-            {caseFile.requirement_packs.requirements.map((requirement) => {
-              const item = itemsByKey.get(requirement.key)
-              if (!item) return null
+        <div>
+          {caseFile.requirement_packs.requirements.map((requirement) => {
+            const item = itemsByKey.get(requirement.key)
+            if (!item) return null
 
-              return (
-                <tr key={requirement.key} className="border-b border-slate-100">
-                  <td className="py-2 pr-2 align-top">
-                    <p className="font-medium text-slate-900">
-                      {requirement.label}
+            return (
+              <div
+                key={requirement.key}
+                className="flex items-start justify-between gap-4 border-b border-dotted border-rule py-2.5"
+              >
+                <div>
+                  <p className="text-sm font-medium text-ink">
+                    {requirement.label}
+                  </p>
+                  {item.source_text && (
+                    <p className="mt-0.5 max-w-md font-mono text-xs text-ink-soft">
+                      &ldquo;{item.source_text}&rdquo;
                     </p>
-                    {item.source_text && (
-                      <p className="mt-1 text-xs text-slate-500">
-                        &ldquo;{item.source_text}&rdquo;
-                      </p>
-                    )}
-                  </td>
-                  <td className="py-2 pr-2 align-top">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-2 align-top text-xs text-slate-500">
-                    {item.received_at
-                      ? new Date(item.received_at).toLocaleString()
-                      : '—'}
-                  </td>
-                  <td className="py-2 pr-2 align-top text-xs text-slate-500">
+                  )}
+                  <p className="mt-0.5 font-mono text-xs text-ink-soft">
                     {item.matched_by ?? (item.reviewed_by ? 'manual' : '—')}
                     {item.matched_confidence !== null
                       ? ` (${Math.round(item.matched_confidence * 100)}%)`
                       : ''}
-                  </td>
-                  <td className="py-2 align-top text-xs text-slate-500">
-                    {item.users?.email ?? '—'}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    {item.users?.email ? ` · reviewed by ${item.users.email}` : ''}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <Stamp
+                    status={item.status === 'received' ? 'received' : 'missing'}
+                  />
+                  <p className="mt-1 font-mono text-xs text-ink-soft">
+                    {item.received_at
+                      ? new Date(item.received_at).toLocaleString()
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </section>
 
       {sortedChaseMessages.length > 0 && (
         <section className="mb-8">
-          <h3 className="mb-2 text-sm font-semibold text-slate-900">
+          <h3 className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-soft">
             Chase messages
           </h3>
           <ul className="space-y-2">
             {sortedChaseMessages.map((message) => (
               <li
                 key={message.id}
-                className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600"
+                className="rounded-card bg-card px-3 py-2 text-xs text-ink-soft"
               >
-                <p className="mb-1 font-medium text-slate-500">
+                <p className="mb-1 font-mono font-medium text-ink-soft">
                   {message.sent_at
                     ? new Date(message.sent_at).toLocaleString()
                     : 'Not sent'}{' '}
-                  &middot; {message.method}
+                  &middot; <Badge variant="neutral">{message.method}</Badge>
                 </p>
-                <p className="whitespace-pre-wrap">{message.body}</p>
+                <p className="whitespace-pre-wrap text-ink">{message.body}</p>
               </li>
             ))}
           </ul>
@@ -208,19 +192,22 @@ export default async function AuditPacketPage({
       )}
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-900">
+        <h3 className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-soft">
           Full audit trail
         </h3>
-        <ul className="space-y-1 text-xs text-slate-600">
+        <ul className="space-y-1 font-mono text-xs text-ink-soft">
           {sortedAuditLog.map((entry) => (
-            <li key={entry.id} className="border-b border-slate-100 py-1.5">
-              <span className="text-slate-400">
+            <li
+              key={entry.id}
+              className="border-b border-dotted border-rule py-1.5"
+            >
+              <span className="text-ink-soft/70">
                 {new Date(entry.created_at).toLocaleString()}
               </span>{' '}
-              &middot; <span className="font-medium">{entry.event_type}</span>
+              &middot; <span className="font-medium text-ink">{entry.event_type}</span>
               {entry.users?.email ? ` by ${entry.users.email}` : ''}
               {Object.keys(entry.event_payload).length > 0 && (
-                <span className="text-slate-400">
+                <span className="text-ink-soft/70">
                   {' — '}
                   {JSON.stringify(entry.event_payload)}
                 </span>

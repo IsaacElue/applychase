@@ -8,20 +8,22 @@ export default async function LoginPage({
   const { error, message } = await searchParams
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-paper px-4">
+      <div className="w-full max-w-sm space-y-6 rounded-card border border-rule bg-card p-8">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">ApplyChase</h1>
-          <p className="text-sm text-slate-500">Sign in to your account</p>
+          <h1 className="font-display text-2xl font-bold text-ink">
+            ApplyChase
+          </h1>
+          <p className="text-sm text-ink-soft">Sign in to your account</p>
         </div>
 
         {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="rounded-card bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </p>
         )}
         {message && (
-          <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+          <p className="rounded-card bg-verified/10 px-3 py-2 text-sm text-verified">
             {message}
           </p>
         )}
@@ -29,7 +31,7 @@ export default async function LoginPage({
         <form action={signInWithGoogle}>
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex w-full items-center justify-center gap-2 rounded-card border border-rule bg-white px-3 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:border-ink"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
               <path

@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import type { LlmCredential } from '@/lib/types'
 import { saveLlmCredentials } from './actions'
+import { Input } from '@/components/Input'
+import { Button } from '@/components/Button'
 
 export default async function SettingsPage({
   searchParams,
@@ -18,8 +20,10 @@ export default async function SettingsPage({
 
   return (
     <div className="mx-auto w-full max-w-md px-6 py-8">
-      <h2 className="mb-2 text-lg font-semibold text-slate-900">Settings</h2>
-      <p className="mb-6 text-sm text-slate-500">
+      <h2 className="mb-2 font-display text-xl font-bold text-ink">
+        Settings
+      </h2>
+      <p className="mb-6 text-sm text-ink-soft">
         Chase messages are template-based by default, at no cost. Optionally,
         bring your own Anthropic API key to have AI polish the wording before
         you send it — off by default, and your key is encrypted at rest and
@@ -27,25 +31,25 @@ export default async function SettingsPage({
       </p>
 
       {error && (
-        <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mb-4 rounded-card bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
       )}
       {message && (
-        <p className="mb-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+        <p className="mb-4 rounded-card bg-verified/10 px-3 py-2 text-sm text-verified">
           {message}
         </p>
       )}
 
-      <form action={saveLlmCredentials} className="space-y-4">
+      <form action={saveLlmCredentials} className="space-y-5">
         <div>
           <label
             htmlFor="api_key"
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink"
           >
             Anthropic API key
           </label>
-          <input
+          <Input
             id="api_key"
             name="api_key"
             type="password"
@@ -53,7 +57,7 @@ export default async function SettingsPage({
             placeholder={
               credential ? 'Saved — leave blank to keep it unchanged' : 'sk-ant-...'
             }
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none"
+            className="mt-1"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -62,18 +66,13 @@ export default async function SettingsPage({
             name="enabled"
             type="checkbox"
             defaultChecked={credential?.enabled ?? false}
-            className="h-4 w-4 rounded border-slate-300"
+            className="h-4 w-4 rounded-tag border-rule text-ink focus:ring-ink/20"
           />
-          <label htmlFor="enabled" className="text-sm text-slate-700">
+          <label htmlFor="enabled" className="text-sm text-ink">
             Enable AI polish for chase messages
           </label>
         </div>
-        <button
-          type="submit"
-          className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          Save
-        </button>
+        <Button type="submit">Save</Button>
       </form>
     </div>
   )

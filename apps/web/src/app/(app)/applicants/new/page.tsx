@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Property } from '@/lib/types'
 import { createApplicant } from '../actions'
+import { Input, Select } from '@/components/Input'
+import { Button } from '@/components/Button'
 
 export default async function NewApplicantPage({
   searchParams,
@@ -20,13 +22,16 @@ export default async function NewApplicantPage({
   if (!properties || properties.length === 0) {
     return (
       <div className="mx-auto w-full max-w-md px-6 py-8">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+        <h2 className="mb-4 font-display text-xl font-bold text-ink">
           New Applicant
         </h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-ink-soft">
           Every applicant needs a property to attach to — that&rsquo;s what
           determines which documents this jurisdiction requires.{' '}
-          <Link href="/properties/new" className="text-slate-900 underline">
+          <Link
+            href="/properties/new"
+            className="rounded-tag text-ink underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
+          >
             Add a property first
           </Link>
           , then come back to add this applicant.
@@ -37,30 +42,25 @@ export default async function NewApplicantPage({
 
   return (
     <div className="mx-auto w-full max-w-md px-6 py-8">
-      <h2 className="mb-6 text-lg font-semibold text-slate-900">
+      <h2 className="mb-6 font-display text-xl font-bold text-ink">
         New Applicant
       </h2>
 
       {error && (
-        <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mb-4 rounded-card bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
       )}
 
-      <form action={createApplicant} className="space-y-4">
+      <form action={createApplicant} className="space-y-5">
         <div>
           <label
             htmlFor="property_id"
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink"
           >
             Property
           </label>
-          <select
-            id="property_id"
-            name="property_id"
-            required
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none"
-          >
+          <Select id="property_id" name="property_id" required className="mt-1">
             {properties.map((property) => (
               <option key={property.id} value={property.id}>
                 {property.address}
@@ -68,57 +68,29 @@ export default async function NewApplicantPage({
                 {property.jurisdiction_code})
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="name" className="block text-sm font-medium text-ink">
             Applicant name
           </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none"
-          />
+          <Input id="name" name="name" type="text" required className="mt-1" />
         </div>
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="email" className="block text-sm font-medium text-ink">
             Email (optional)
           </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none"
-          />
+          <Input id="email" name="email" type="email" className="mt-1" />
         </div>
         <div>
-          <label
-            htmlFor="phone"
-            className="block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="phone" className="block text-sm font-medium text-ink">
             Phone (optional)
           </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none"
-          />
+          <Input id="phone" name="phone" type="tel" className="mt-1" />
         </div>
-        <button
-          type="submit"
-          className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
-        >
+        <Button type="submit" className="w-full">
           Create Case File
-        </button>
+        </Button>
       </form>
     </div>
   )
