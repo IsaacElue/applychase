@@ -27,6 +27,9 @@ export default async function AppLayout({
             <Link href="/applicants/new" className="hover:text-slate-900">
               + New Applicant
             </Link>
+            <Link href="/settings" className="hover:text-slate-900">
+              Settings
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4 text-sm text-slate-600">

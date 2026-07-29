@@ -7,7 +7,13 @@ import {
   classifyByEmbedding,
   EMBEDDING_MATCH_THRESHOLD,
 } from '@/lib/matching/embeddings'
-import type { CaseItem, MatchedBy, RequirementPack } from '@/lib/types'
+import { decryptSecret } from '@/lib/crypto/byok'
+import type {
+  CaseItem,
+  ChaseMessageMethod,
+  MatchedBy,
+  RequirementPack,
+} from '@/lib/types'
 
 interface CaseFileForMatching {
   id: string
@@ -158,12 +164,13 @@ export async function setCaseItemStatus(formData: FormData) {
 export async function sendChaseMessage(formData: FormData) {
   const caseFileId = formData.get('case_file_id') as string
   const body = formData.get('body') as string
+  const method = (formData.get('method') as ChaseMessageMethod) || 'template'
 
   const supabase = await createClient()
 
   const { error } = await supabase.from('chase_messages').insert({
     case_file_id: caseFileId,
-    method: 'template',
+    method,
     body,
     sent_at: new Date().toISOString(),
   })
@@ -172,9 +179,107 @@ export async function sendChaseMessage(formData: FormData) {
     await supabase.from('audit_log').insert({
       case_file_id: caseFileId,
       event_type: 'chase_message_sent',
-      event_payload: { method: 'template' },
+      event_payload: { method },
     })
   }
 
   revalidatePath(`/case-files/${caseFileId}`)
+}
+
+// Optional, off-by-default BYOK step (PRD §8.5 / §16 step 8): rewrites the
+// already-generated template, it never drafts from scratch. Only reachable
+// if the org has AI polish enabled with a stored key — the core chase-
+// message loop above never depends on this succeeding or even running.
+export async function polishChaseMessage(
+  caseFileId: string,
+  draftBody: string
+): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { ok: false, error: 'Not signed in' }
+  }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('org_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) {
+    return { ok: false, error: 'No organization found' }
+  }
+
+  const { data: credential } = await supabase
+    .from('llm_credentials')
+    .select('enabled, encrypted_key')
+    .eq('org_id', profile.org_id)
+    .eq('provider', 'anthropic')
+    .maybeSingle()
+
+  if (!credential || !credential.enabled) {
+    return { ok: false, error: 'AI polish is not enabled for your organization' }
+  }
+
+  let apiKey: string
+  try {
+    apiKey = decryptSecret(credential.encrypted_key)
+  } catch {
+    return { ok: false, error: 'Could not decrypt the stored API key' }
+  }
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        messages: [
+          {
+            role: 'user',
+            content:
+              'Rewrite the following chase message to a rental applicant so it reads naturally and courteously. Keep every requested item exactly as named — do not add, remove, or change which documents are being requested, and do not invent any facts. Return only the rewritten message, nothing else.\n\n' +
+              draftBody,
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      return {
+        ok: false,
+        error: `Anthropic API error (${response.status}): ${errorText}`,
+      }
+    }
+
+    const data: { content?: { text?: string }[] } = await response.json()
+    const text = data.content?.[0]?.text
+
+    if (!text) {
+      return { ok: false, error: 'Anthropic returned no text' }
+    }
+
+    await supabase.from('audit_log').insert({
+      case_file_id: caseFileId,
+      event_type: 'chase_message_polished',
+      event_payload: { method: 'llm', provider: 'anthropic' },
+      actor: user.id,
+    })
+
+    return { ok: true, text }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unknown error calling Anthropic',
+    }
+  }
 }

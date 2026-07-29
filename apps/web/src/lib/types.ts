@@ -68,3 +68,14 @@ export interface AuditLogEntry {
   actor: string | null
   created_at: string
 }
+
+export type LlmProvider = 'anthropic' | 'openai'
+
+export interface LlmCredential {
+  id: string
+  org_id: string
+  provider: LlmProvider
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}

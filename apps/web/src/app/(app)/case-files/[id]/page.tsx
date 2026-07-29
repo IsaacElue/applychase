@@ -77,6 +77,14 @@ export default async function CaseFileDetailPage({
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )
 
+  const { data: credential } = await supabase
+    .from('llm_credentials')
+    .select('enabled')
+    .eq('provider', 'anthropic')
+    .maybeSingle<{ enabled: boolean }>()
+
+  const aiPolishEnabled = credential?.enabled ?? false
+
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-8">
       <div className="mb-6 flex items-start justify-between">
@@ -133,6 +141,7 @@ export default async function CaseFileDetailPage({
           <ChaseMessagePanel
             caseFileId={caseFile.id}
             initialBody={chaseMessageBody}
+            aiPolishEnabled={aiPolishEnabled}
           />
         </div>
       ) : (
