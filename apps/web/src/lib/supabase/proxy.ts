@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/auth']
+const PUBLIC_PATHS = ['/login', '/auth', '/welcome']
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -30,6 +30,14 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Signed-out visitors hitting the root route see the public marketing
+  // page instead of being bounced to /login — rewritten (not redirected)
+  // so the URL bar still shows "/". Signed-in visitors are untouched and
+  // still get the real Dashboard at (app)/page.tsx.
+  if (!user && request.nextUrl.pathname === '/') {
+    return NextResponse.rewrite(new URL('/welcome', request.url))
+  }
 
   const isPublicPath = PUBLIC_PATHS.some((path) =>
     request.nextUrl.pathname.startsWith(path)
