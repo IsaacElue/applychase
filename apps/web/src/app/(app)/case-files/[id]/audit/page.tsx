@@ -93,7 +93,7 @@ export default async function AuditPacketPage({
 
       <div className="mb-6 border-b-2 border-ink pb-6">
         <h2 className="font-display text-2xl font-bold text-ink">
-          Audit Packet &mdash; {caseFile.applicants?.name}
+          Audit Packet: {caseFile.applicants?.name}
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
           {caseFile.applicants?.properties.address}
@@ -114,10 +114,9 @@ export default async function AuditPacketPage({
       </div>
 
       <div className="mb-8 rounded-card border border-folder-tan/40 bg-folder-tan/10 px-4 py-3 text-xs text-ink-soft">
-        This packet documents which items were received and when. It reflects
-        document intake only — <strong>no automated accept/deny decision
-        was made</strong> about this applicant by ApplyChase or any part of
-        this system.
+        This packet documents which items were received and when.{' '}
+        <strong>ApplyChase never made an automated accept/deny decision</strong>{' '}
+        about this applicant.
       </div>
 
       <section className="mb-8">
@@ -144,7 +143,7 @@ export default async function AuditPacketPage({
                     </p>
                   )}
                   <p className="mt-0.5 font-mono text-xs text-ink-soft">
-                    {item.matched_by ?? (item.reviewed_by ? 'manual' : '—')}
+                    {item.matched_by ?? (item.reviewed_by ? 'manual' : 'N/A')}
                     {item.matched_confidence !== null
                       ? ` (${Math.round(item.matched_confidence * 100)}%)`
                       : ''}
@@ -158,7 +157,7 @@ export default async function AuditPacketPage({
                   <p className="mt-1 font-mono text-xs text-ink-soft">
                     {item.received_at
                       ? new Date(item.received_at).toLocaleString()
-                      : '—'}
+                      : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -208,7 +207,7 @@ export default async function AuditPacketPage({
               {entry.users?.email ? ` by ${entry.users.email}` : ''}
               {Object.keys(entry.event_payload).length > 0 && (
                 <span className="text-ink-soft/70">
-                  {' — '}
+                  {' · '}
                   {JSON.stringify(entry.event_payload)}
                 </span>
               )}

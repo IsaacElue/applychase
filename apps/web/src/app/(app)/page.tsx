@@ -106,8 +106,8 @@ export default async function DashboardPage({
           icon={FolderOpen}
           message={
             showArchived
-              ? 'No archived case files. Case files you archive (leased, applicant withdrew, duplicate entry, etc.) show up here instead of the default list — they’re never deleted.'
-              : 'A case file tracks which documents an applicant still owes you — application, ID, proof of income, and so on — so nothing gets lost and you have a timestamped record of what came in and when. To start one, add a property, then add an applicant for it.'
+              ? 'No archived case files yet. Archived files (leased, withdrew, duplicate entry) stay off the main list, but are never deleted.'
+              : 'A case file tracks which documents each applicant still owes you, so nothing gets lost. Add a property, then an applicant, to get started.'
           }
           actionLabel={showArchived ? undefined : '+ New Applicant'}
           actionHref={showArchived ? undefined : '/applicants/new'}

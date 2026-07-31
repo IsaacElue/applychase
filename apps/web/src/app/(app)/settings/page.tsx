@@ -24,10 +24,9 @@ export default async function SettingsPage({
         Settings
       </h2>
       <p className="mb-6 text-sm text-ink-soft">
-        Chase messages are template-based by default, at no cost. Optionally,
-        bring your own Anthropic API key to have AI polish the wording before
-        you send it — off by default, and your key is encrypted at rest and
-        never used for anything else.
+        Chase messages are template-based by default, at no cost. Optionally
+        add your own Anthropic API key to polish the wording. Off by default.
+        Your key stays encrypted, never used for anything else.
       </p>
 
       {error && (
@@ -55,7 +54,7 @@ export default async function SettingsPage({
             type="password"
             autoComplete="off"
             placeholder={
-              credential ? 'Saved — leave blank to keep it unchanged' : 'sk-ant-...'
+              credential ? 'Saved, leave blank to keep it unchanged' : 'sk-ant-...'
             }
             className="mt-1"
           />

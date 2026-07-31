@@ -41,9 +41,9 @@ export function ChaseMessagePanel({
     <Card>
       <h3 className="mb-2 text-sm font-medium text-ink">Chase message</h3>
       <p className="mb-3 text-xs text-ink-soft">
-        Fill-in-the-blank template — edit as needed, then copy it into your
-        own email client. &ldquo;Mark as sent&rdquo; only records it in this
-        case file&rsquo;s audit trail; it does not send an email itself.
+        Fill-in-the-blank template. Edit as needed, then copy it into your
+        own email client. &ldquo;Mark as sent&rdquo; only logs it in this
+        case file&rsquo;s audit trail. It doesn&rsquo;t send an email.
       </p>
       <textarea
         value={body}

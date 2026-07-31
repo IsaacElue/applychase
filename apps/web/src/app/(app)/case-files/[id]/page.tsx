@@ -124,9 +124,8 @@ export default async function CaseFileDetailPage({
       </div>
 
       <p className="mb-6 rounded-card border border-folder-tan/40 bg-folder-tan/10 px-3 py-2 text-xs text-ink-soft">
-        This case file tracks intake and documentation only — no automated
-        accept/deny decision is made about this applicant by ApplyChase or
-        any part of this system.
+        This case file tracks intake and documentation only. ApplyChase never
+        makes an automated accept/deny decision about this applicant.
       </p>
 
       {error && (
@@ -147,11 +146,10 @@ export default async function CaseFileDetailPage({
           Log what the applicant sent you
         </h3>
         <p className="mb-3 text-xs text-ink-soft">
-          Paste in the applicant&rsquo;s email or message and this will check
-          it against what&rsquo;s still outstanding, marking anything it
-          recognizes as received automatically — no need to review each item
-          by hand. Matching happens locally by keyword and text similarity;
-          it never calls out to an AI service.
+          Paste in the applicant&rsquo;s email or message. It&rsquo;s checked
+          against what&rsquo;s still outstanding, and anything recognized is
+          marked received automatically. Matching happens locally, by
+          keyword and text similarity. No AI call, ever.
         </p>
         <form action={classifyPastedText} className="space-y-3">
           <input type="hidden" name="case_file_id" value={caseFile.id} />
@@ -175,8 +173,7 @@ export default async function CaseFileDetailPage({
         </div>
       ) : (
         <p className="mb-8 rounded-card bg-verified/10 px-3 py-2 text-sm text-verified">
-          Everything&rsquo;s been received for this applicant — there&rsquo;s
-          nothing left to chase.
+          Everything&rsquo;s been received. Nothing left to chase.
         </p>
       )}
 

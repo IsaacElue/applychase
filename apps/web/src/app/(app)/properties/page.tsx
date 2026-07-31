@@ -34,7 +34,7 @@ export default async function PropertiesPage() {
       {properties && properties.length === 0 && (
         <EmptyState
           icon={Building2}
-          message="Properties are what applicants and their case files attach to — each one carries the jurisdiction that determines which documents you're required to collect. Add a property first, then you can start adding applicants to it."
+          message="Every applicant attaches to a property, and each property sets the jurisdiction that determines what documents you need. Add one to get started."
           actionLabel="+ New Property"
           actionHref="/properties/new"
         />

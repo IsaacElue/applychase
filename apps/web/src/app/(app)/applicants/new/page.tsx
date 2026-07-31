@@ -26,13 +26,13 @@ export default async function NewApplicantPage({
           New Applicant
         </h2>
         <p className="text-sm text-ink-soft">
-          Every applicant needs a property to attach to — that&rsquo;s what
-          determines which documents this jurisdiction requires.{' '}
+          Every applicant needs a property first. It determines which
+          documents are required.{' '}
           <Link
             href="/properties/new"
             className="rounded-tag text-ink underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
           >
-            Add a property first
+            Add one
           </Link>
           , then come back to add this applicant.
         </p>
